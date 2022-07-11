@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import React,{useRef, useState, useEffect, Component} from 'react';
 import type {Node} from 'react';
 import {
   SafeAreaView,
@@ -16,6 +16,7 @@ import {
   Text,
   useColorScheme,
   View,
+  BackHandler,
 } from 'react-native';
 
 import {
@@ -55,16 +56,37 @@ const Section = ({children, title}): Node => {
 };
 
 const App: () => Node = () => {
+  const serviceUrl = 'http://uquiz.didimu.co.kr';
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  //webview 뒤로가기
+  const webview = useRef<WebView>(null);
+  const exitApp = false;
+
+  const onAndroidBackPress = (): boolean => {
+    if (webview.current) {
+      webview.current.goBack();
+      return true; // prevent default behavior (exit app)
+    }
+    return false;
+  };
+  useEffect((): (() => void) => {
+    BackHandler.addEventListener('hardwareBackPress', onAndroidBackPress);
+    return (): void => {
+      BackHandler.removeEventListener('hardwareBackPress', onAndroidBackPress);
+    };
+  }, []); // Never re-run this effect
+  //webview 뒤로가기 끝
+
   return (
     <WebView
-      source={{ uri: 'http://uquiz.didimu.co.kr' }}
+      source={{ uri: serviceUrl }}
       style={{ marginTop: 0 }}
+      ref={webview}
     />
   );
 };
